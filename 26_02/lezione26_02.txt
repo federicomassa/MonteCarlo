@@ -1,0 +1,44 @@
+Simuliamo N punti (N = 10), immaginiamo che le due variabili siano correlate da una legge lineare. y = mx, m scelto da noi.
+
+Per una misura x1 ci aspettiamo y1 = m*x1. In realtà y1 viene alterata da fluttuazioni statistiche, per esempio gaussiana, con una certa gaussiana. 
+Estraiamo dei punti a caso dalla gaussiana. Si può calcolare per ogni x la distribuzione delle y, con media e varianza campionarie. Voglio almeno tre punti per ogni x, anche se matematicamente ne basterebbero 2. 
+
+Si può poi fare una tabella di xi, yi(generato), yi(teorico).
+
+Dai y_generati si può fare un fit e fare un test del chi2.
+voglio anche controllare se s^2 è compatibile con sigma^2.
+
+se ho un bersaglio rettangolare e voglio popolarlo uniformemente faccio uniforme su entrambi gli assi.
+
+se ho un bersaglio circolare?
+
+dN = k dxdy = k r dr dphi = k d(r^2) dphi, che è un dominio rettangolare nel nuovo sistema di coordinate.
+
+-> phi = 2pi csi_1
+--> r = R sqrt(csi_1)
+
+per la gaussiana?
+
+la tecnica analitica sarebbe:
+
+csi = integr(-inf,x) [P(u)du] e poi invertire x. Ma con la gaussiana erf non si sa invertire.
+
+Se voglio popolare gaussianamente un piano con una distribuzione gaussiana in (x,y) devo fare:
+
+dN = k e^((-x^2-y^2)/(2*sigma^2)) dx dy = k e^(-r^2/(2sigma^2)) r dr dphi
+
+ora: 
+
+d(e^(-r^2/2sigma^2) = -r/sigma^2 e^(..) dr, che è esattamente quello che abbiamo.
+
+Per cui:
+
+--> phi = 2pi csi_1
+--> e^(-r^2/(2sigma^2)) = csi_2 --> r = -sqrt(2) sigma sqrt(-log csi_2)
+
+--> x = sigma sqrt(-log csi_2) cos(2pi csi_1)
+--> y = sigma sqrt(-log csi_2) sin(2pi csi_1)
+
+se te ne serve uno solo ne generi uno solo, però ti servono due numeri casuali.
+
+Ora abbiamo tutto. Inventiamo una m, una sigma, e calcoliamo tutti.
