@@ -1,3 +1,6 @@
+//stesso script di retta.cpp (26_03) ma con punti generati uniformemente anziché gaussianamente.
+//Sigma è la deviazione standard della distribuzione uniforme (1/sqrt(12)*ampiezza)
+
 #include <TMath.h>
 #include <TRandom3.h>
 #include <TH1F.h>
@@ -13,13 +16,12 @@ double pi = 4*TMath::ATan(1);
 double logL(double slope, double x[], double y_g[][3], double sigma);
 
 
-void retta() {
+void retta_uniform() {
   TRandom3 rndgen;
   double m = 1;
   const int dim = 10;
   double sigma = 0.1;
   const int camp = 3;
-  int imax = 0;
   
   double x[dim] = {1,2,3,4,5,6,7,8,9,10};
   double y_t[dim];
@@ -47,7 +49,7 @@ void retta() {
   
   for (int i = 0; i < dim; i++) { 
   for (int j = 0; j < camp; j++) {
-    y_g[i][j] = rndgen.Gaus(y_t[i],sigma);
+    y_g[i][j] = y_t[i] + rndgen.Uniform(TMath::Sqrt(12)*sigma) - TMath::Sqrt(12)*sigma/2;
   }
   }
 
@@ -91,7 +93,7 @@ void retta() {
   for (int i = 0; i < 101; i++) {
     func_m[i] = 0.99 + double(i)/100*0.02;
     func_L[i] = logL(func_m[i],x,y_g,sigma);
-    if (func_L[i] > maxL) {maxL = func_L[i]; imax = i;}
+    if (func_L[i] > maxL) maxL = func_L[i];
   }
  
   //TRASLAZIONE logL
@@ -103,6 +105,7 @@ void retta() {
  TF1* CL = new TF1("CL","-0.5",0.5,1.5);
   TGraph* lk_graph = new TGraph(100,func_m,func_L);
   TCanvas* lk = new TCanvas();
+  lk->cd();
   lk_graph->SetTitle("logL(m);m;logL(m)");
   lk_graph->SetMarkerStyle(7);
   lk_graph->DrawClone("AP");
@@ -118,8 +121,10 @@ void retta() {
   s2_graph->SetMarkerStyle(2);
 
   TCanvas* c1 = new TCanvas();
+  c1->cd();
   mean_graph->DrawClone("APE");
   TCanvas* c2 = new TCanvas();
+  c2->cd();
   s2_graph->DrawClone("APE");
 
   std::cout << "Media s2: " << mean_s2 << std::endl;
