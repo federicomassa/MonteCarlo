@@ -45,6 +45,14 @@ double magg1(double mee) {
 
 }
 
+double magg1(double mee) {
+  double me = 0.5109989;
+  
+  return 2/mee;
+
+}
+
+
 void kroll_wada() {
   double me = 0.5109989;
   double M = 134.9766;
