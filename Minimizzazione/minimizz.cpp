@@ -2,6 +2,8 @@
 #include <TMath.h>
 #include <TRandom3.h>
 #include <cmath>
+#include <TH2F.h>
+
 
 double min_func(int nmeas, double x[], double y[],double sigma, double pars[]) {
   
@@ -16,6 +18,18 @@ double min_func(int nmeas, double x[], double y[],double sigma, double pars[]) {
   return chi2;
   
 }
+
+// double min_func(int nmeas, double x[], double y[],double sigma, double pars[]) {
+  
+//   double chi2 = 0;
+
+//   chi2 = (pars[0]-3.2)*(pars[0]-3.2) + (pars[1]+2.5)*(pars[1]+2.5);
+
+      
+
+//   return chi2;
+  
+// }
 
 void iter(int i, int* step, int npars, bool &first) { //in pratica un convertitore di numeri decimali in ternari
   double id = double(i);
@@ -47,35 +61,49 @@ void iter(int i, int* step, int npars, bool &first) { //in pratica un convertito
 
 void minimizz() {
   int npars = 2;
+  int nmeas = 5;
   int step[npars];
   TRandom3 rndgen;
   double* pars = new double[npars];
   double m_t = 6;
   double a_t = -4;
   double pars_best[npars];
-  double pars_step = 0.013;
+  double pars_step = 0.1;
   double pars_init[npars];
   double pars_start[npars];
-  double x[100];
-  double y[100];
-  double sigma = 0.0001;
+  double x[nmeas];
+  double y[nmeas];
+  double sigma = 0.1;
   bool end_cycle = true; // è true quando ha trovato il minimo di tutti i parametri 
   bool first = true;
   double chi2_old;
   double chi2;
 
 
-  for (int i = 0; i < 100; i++){
+  for (int i = 0; i < nmeas; i++){
     x[i] = double(i);
-    y[i] = rndgen.Gaus(m_t*x[i]+a_t*x[i]*x[i],sigma);
+    y[i] = m_t*x[i]+a_t*x[i]*x[i];
   }
+
+  //grafico chi2
+  TH2F* chi2_hist = new TH2F("chi2_hist","Grafico Chi2;m;a;Chi2",100,5.999,6.001,100,-4.001,-3.999);
+  for (int i = 1; i <= 100; i++) {
+    for (int j = 1; j <= 100; j++) {
+      pars[0] = 5.999 + double(i)/100*0.002;
+      pars[1] = -4.001 + double(j)/100*0.002;
+      chi2_hist->SetBinContent(i,j,min_func(nmeas,x,y,sigma,pars));
+    }
+  }
+
+  chi2_hist->Draw();
+
 
   //inizializzazione parametri
   for (int i = 0; i < npars; i++) {
-    pars_init[0] = 5.9;
-    pars_init[1] = -3.9;
+    pars_init[0] = 7;
+    pars_init[1] = -5;
     pars[i] = pars_init[i];
-    chi2 = min_func(10,x,y,sigma,pars);
+    chi2 = min_func(nmeas,x,y,sigma,pars);
     chi2_old = chi2;
   }
 
@@ -84,20 +112,24 @@ void minimizz() {
     for (int i = 0; i < npars; i++) {
       pars_start[i] = pars[i];}
 
-    for (int i = 0; i < TMath::Power(3,double(npars)) ; i++) {
+    for (int i = 0; i < TMath::Nint(TMath::Power(3,double(npars))) ; i++) {
 
       iter(i,step,npars,first);
       for(int k = 0; k < npars; k++)
-	pars[k] = pars_start[k] + double((step[k]-1))*pars_step; //step è 0,1,2
+	pars[k] = pars_start[k] + double((step[npars-k-1]-1))*pars_step; //step è 0,1,2
       
-      chi2 = min_func(10,x,y,sigma,pars);
-      if(chi2 <= chi2_old) {chi2_old = chi2; for (int k = 0; k < npars; k++) pars_best[k] = pars[k]; std::cout << chi2 << std::endl;}
+      chi2 = min_func(nmeas,x,y,sigma,pars);
+      //        std:: cout << "i: " << i << " chi2: " << chi2 << " m: " << pars[0] << " a: " << pars[1] << std::endl;
+      if(chi2 <= chi2_old) {chi2_old = chi2; for (int k = 0; k < npars; k++) pars_best[k] = pars[k]; /*std::cout << "SCELTO" << std::endl;*/}
       
     }
     
+    //  std::cout << std::endl;
    
     for (int i = 0; i < npars; i++) {
-      pars[i] = pars_best[i];
+      pars[i] = pars_best[i];}
+    
+    for (int i = 0; i < npars; i++) {
       if (pars_best[i] == pars_start[i]) end_cycle = true;
       else {end_cycle = false; break;}
     }

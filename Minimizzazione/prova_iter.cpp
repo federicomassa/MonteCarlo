@@ -31,8 +31,8 @@ void iter(int i, int* step, int npars, bool &first) { //in pratica un convertito
 
 void prova() {
 
-  int p[6];
-  int npars = 6;
+  int p[2];
+  int npars = 2;
   int i;
   bool first = true;
 
