@@ -68,7 +68,7 @@ void minimizz() {
   double m_t = 6;
   double a_t = -4;
   double pars_best[npars];
-  double pars_step = 0.1;
+  double pars_step = 0.000001;
   double pars_init[npars];
   double pars_start[npars];
   double x[nmeas];
@@ -86,11 +86,13 @@ void minimizz() {
   }
 
   //grafico chi2
-  TH2F* chi2_hist = new TH2F("chi2_hist","Grafico Chi2;m;a;Chi2",100,5.999,6.001,100,-4.001,-3.999);
+  TH2F* chi2_hist = new TH2F("chi2_hist","Grafico Chi2;m;a;Chi2",100,5.999,6.005,100,-4.001,-3.999);
   for (int i = 1; i <= 100; i++) {
     for (int j = 1; j <= 100; j++) {
-      pars[0] = 5.999 + double(i)/100*0.002;
+      pars[0] = 5.999 + double(i)/100*0.006;
+      //pars[0] = 6;
       pars[1] = -4.001 + double(j)/100*0.002;
+	    // pars[1] = -4;
       chi2_hist->SetBinContent(i,j,min_func(nmeas,x,y,sigma,pars));
     }
   }
@@ -100,8 +102,8 @@ void minimizz() {
 
   //inizializzazione parametri
   for (int i = 0; i < npars; i++) {
-    pars_init[0] = 7;
-    pars_init[1] = -5;
+    pars_init[0] = 8;
+    pars_init[1] = -6;
     pars[i] = pars_init[i];
     chi2 = min_func(nmeas,x,y,sigma,pars);
     chi2_old = chi2;
