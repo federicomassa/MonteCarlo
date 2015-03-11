@@ -31,52 +31,30 @@ double min_func(int nmeas, double x[], double y[],double sigma, double pars[]) {
   
 // }
 
-void iter(int i, int* step, int npars, bool &first) { //in pratica un convertitore di numeri decimali in ternari
-  double id = double(i);
-  int id_int;
-  Int_t k;
-  double log_id = TMath::Log(id);
-  double log3 = TMath::Log(3);
-
-  if (first) {
-    for (int j = 0; j < npars; j++) step[j] = 0;}
-
-  if (id != 0) {
-    if (TMath::Abs(log_id/log3 - double(TMath::Nint(log_id/log3))) < 1E-10 ) {step[TMath::Nint(log_id/log3)] += 1; first = true;}
-    else {
-
-      k = TMath::CeilNint(TMath::Log(id)/TMath::Log(3));
-      step[k-1] += 1;
-      id -= TMath::Power(3,k-1);
-      id_int = int(id);
-      first = false;
-      iter(id_int, step, npars,first);
-  
-    }
-  }
-  else first = true;
-
-}
 
 
 void minimizz() {
+  bool sign;
+  double norm_grad;
   int npars = 2;
   int nmeas = 5;
-  int step[npars];
   TRandom3 rndgen;
   double* pars = new double[npars];
   double m_t = 6;
   double a_t = -4;
   double pars_best[npars];
-  double pars_step = 0.001;
+  double pars_step[npars];  //per calcolo derivata
+  double radius = 0.0001;
   double pars_init[npars];
   double pars_start[npars];
+  double chi2_up[npars];
+  double chi2_down[npars];
+  double grad_up[npars];
+  double grad_down[npars];
   double x[nmeas];
   double y[nmeas];
   double sigma = 0.1;
   bool end_cycle = true; // è true quando ha trovato il minimo di tutti i parametri 
-  bool first = true;
-  double chi2_old;
   double chi2;
 
 
@@ -102,11 +80,11 @@ void minimizz() {
 
   //inizializzazione parametri
   for (int i = 0; i < npars; i++) {
+    pars_step[i] = 0.00001;
     pars_init[0] = 8;
     pars_init[1] = -6;
     pars[i] = pars_init[i];
     chi2 = min_func(nmeas,x,y,sigma,pars);
-    chi2_old = chi2;
   }
 
   do {
@@ -114,29 +92,48 @@ void minimizz() {
     for (int i = 0; i < npars; i++) {
       pars_start[i] = pars[i];}
 
-    for (int i = 0; i < TMath::Nint(TMath::Power(3,double(npars))) ; i++) {
+    chi2 = min_func(nmeas,x,y,sigma,pars);
 
-      iter(i,step,npars,first);
-      for(int k = 0; k < npars; k++)
-	pars[k] = pars_start[k] + double((step[npars-k-1]-1))*pars_step; //step è 0,1,2
-      
-      chi2 = min_func(nmeas,x,y,sigma,pars);
-      //        std:: cout << "i: " << i << " chi2: " << chi2 << " m: " << pars[0] << " a: " << pars[1] << std::endl;
-      if(chi2 <= chi2_old) {chi2_old = chi2; for (int k = 0; k < npars; k++) pars_best[k] = pars[k]; /*std::cout << "SCELTO" << std::endl;*/}
+    for (int i = 0; i < npars; i++){
+      pars[i] = pars_start[i] + pars_step[i];
+      chi2_up[i] = min_func(nmeas,x,y,sigma,pars);
+      pars[i] = pars_start[i] - pars_step[i];
+      chi2_down[i] = min_func(nmeas,x,y,sigma,pars);
+      pars[i] = pars_start[i];
+      grad_up[i] = (chi2_up[i]-chi2)/pars_step[i];
+      grad_down[i] = (chi2 - chi2_down[i])/pars_step[i];
       
     }
+
+    norm_grad = 0;
+    for (int i = 0; i < npars; i++)
+      norm_grad += grad_up[i]*grad_up[i];
+
+    for (int i = 0; i < npars; i++)
+      grad_up[i] = grad_up[i]/norm_grad*radius;
     
-    //  std::cout << std::endl;
-   
-    for (int i = 0; i < npars; i++) {
-      pars[i] = pars_best[i];}
     
+
+  sign = true;
+  for (int i = 0; i < npars; i++) {
+    sign = sign && (grad_up[i] > 0 && grad_down[i] < 0);}
+
+  if (sign) { //siamo nel minimo
+    end_cycle = true;
     for (int i = 0; i < npars; i++) {
-      if (pars_best[i] == pars_start[i]) end_cycle = true;
-      else {end_cycle = false; break;}
+      pars_best[i] = pars_start[i];
     }
-    //alla fine del for end_cycle è vero solo se il punto migliore
-    //è quello di prima
+    break;
+  }
+
+  else { 
+    end_cycle = false;
+    for (int i = 0; i < npars; i++) {
+      pars[i] = pars_start[i] - grad_up[i]; // segno - per andare verso il minimo
+    }
+  }
+
+ 
     
     
     
@@ -148,5 +145,5 @@ void minimizz() {
   
   std::cout << "m minimo: " << pars_best[0] << std::endl;
   std::cout << "a minimo: " << pars_best[1] << std::endl;
-  std::cout << "chi2 minimo: " << chi2_old << std::endl;
+  std::cout << "chi2 minimo: " << chi2 << std::endl;
 }
